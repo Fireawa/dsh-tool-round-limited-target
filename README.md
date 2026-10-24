@@ -1,8 +1,4 @@
-# dsh-tool-round-limited-target
-
-> **中文意思：DSH「限轮目标」工具**
-> `dsh-tool` = DSH 的工具，`round-limited-target` = 有轮数上限的目标。
-> 一句话：给 DSH 的 `/goal` 加一个数字，数字就是自动执行的轮数，用完自动停。
+# dsh-tool-round-limited-target（限轮目标）
 
 [![CI](https://github.com/Fireawa/dsh-tool-round-limited-target/actions/workflows/ci.yml/badge.svg)](https://github.com/Fireawa/dsh-tool-round-limited-target/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
