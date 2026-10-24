@@ -1,0 +1,57 @@
+{
+  "name": "dsh-tool-round-limited-target",
+  "version": "1.1.0",
+  "type": "module",
+  "description": "给 DSH 的 /goal 加轮数：/goal 3 整理文档 —— 数字就是自动执行的轮数，用完自动停止（round-limit）。",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "dsh-plugin",
+    "goal",
+    "rounds",
+    "slash-command"
+  ],
+  "license": "MIT",
+  "author": "Fireawa",
+  "homepage": "https://github.com/Fireawa/dsh-tool-round-limited-target#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fireawa/dsh-tool-round-limited-target.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Fireawa/dsh-tool-round-limited-target/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "selftest.mjs",
+    "verify-live.mjs",
+    "mutate.mjs"
+  ],
+  "scripts": {
+    "test": "node selftest.mjs",
+    "verify": "node verify-live.mjs",
+    "mutate": "node mutate.mjs",
+    "check": "node selftest.mjs && node verify-live.mjs && node mutate.mjs"
+  },
+  "meta": {
+    "title": "限轮目标（/goal 加轮数）",
+    "description": "/goal 3 整理文档 —— 在原版 /goal 上只多一个数字，表示最多自动跑几轮；第 N 轮做完自动停止。clear/pause/resume/edit 全部保留，另加 /goal rounds <n>。"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

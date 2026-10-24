@@ -1,0 +1,33 @@
+name: compat
+
+# DSH 还是 0.x，内部约定（作用域优先级、命令名校验、definitionId 语义）可能变。
+# 这个 workflow 每周一拉最新版 DSH，跑「真实环境验证 + 变异测试」当哨兵。
+# 它不拦 PR，只在 Actions 里变红提醒你适配。
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  against-latest-dsh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 安装最新版 DSH
+        run: npm install -g @deepseek-ai/dsh
+
+      - name: 真实环境验证 + 变异测试
+        run: |
+          export DSH_AI_DIR="$(npm root -g)/@deepseek-ai/dsh/node_modules/@deepseek-ai"
+          echo "DSH_AI_DIR=$DSH_AI_DIR"
+          node verify-live.mjs
+          node mutate.mjs

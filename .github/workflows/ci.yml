@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: 语法检查
+        run: |
+          for file in index.js lib/*.js selftest.mjs verify-live.mjs mutate.mjs; do
+            node --check "$file"
+          done
+
+      - name: 离线自检（不依赖 DSH）
+        run: node selftest.mjs
+
+      - name: 真实环境验证（没有本机 DSH 包时自动跳过）
+        run: node verify-live.mjs

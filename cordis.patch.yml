@@ -1,0 +1,25 @@
+# dsh-tool-round-limited-target — 给 /goal 加一个轮数
+#
+#   /goal 3 整理文档        最多自动跑 3 轮，用完自动停（blocked/round-limit）
+#   /goal 整理文档 3        轮数写末尾也认
+#   /goal rounds 8          只改上限，保留已跑进度
+#
+# 接管方式：内置 /goal 挂在 agent preset 的作用域里，命令合并顺序是
+# global → 作用域链（远→近），最近的胜出。所以本插件在 agent 作用域注册同名
+# goal 就压过它，不用改任何全局包；同时保留内置 definitionId，客户端照旧显示
+# 「目标」+ 目标图标，/目标 也能直接敲。
+#
+# 下面是可选配置，值就是默认值。
+
+- insert:
+    - id: round-limited-target
+      name: 'dsh-tool-round-limited-target'
+      config:
+        commandName: goal            # 主命令名（/^[a-z][a-z0-9_-]*$/u）
+        aliasCommandName: target     # 全局别名，接管失败时的退路；'' 关闭
+        shadowGoalPerAgent: true     # false = 退回内置 /goal 行为
+        trailingRounds: true         # false = 只认「/goal 3 目标」，避免「修复 bug 42」被当 42 轮
+        toolName: round_limited_goal # 给模型用的工具
+        defaultRounds: 3             # 工具没写轮数时用这个（超过 maxAllowedRounds 时按上限）
+        maxAllowedRounds: 500        # 超过直接报错，不夹断
+        requireDirectHuman: true     # 工具沿用内置 create_goal 的权限策略
