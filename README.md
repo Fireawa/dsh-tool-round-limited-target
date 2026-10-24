@@ -66,11 +66,4 @@ node mutate.mjs        # 变异测试
 npm run check          # 全跑
 ```
 
-## 已知限制
-
-- 末尾裸数字有歧义：`/goal 修复 bug 42` 会被读成 42 轮。
-- 接管的是命令行为，不是内置包；DSH 升级若改了语法，设 `shadowGoalPerAgent: false` 即可退回。
-- 接管后 `/goal` 不支持附件。
-- 轮数不是时间：3 轮 = 3 次自动继续。
-
 实现只有 `index.js` + `lib/{parse,command,tool,config}.js`，零依赖。发布流程见 [PUBLISHING.md](PUBLISHING.md)，License: MIT。
