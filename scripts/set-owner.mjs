@@ -1,9 +1,10 @@
 /**
- * 把仓库里的 __OWNER__ 占位符替换成你的 GitHub 用户名。
+ * Replace the __OWNER__ placeholder with your GitHub username.
  *
- *   node scripts/set-owner.mjs <github-用户名>
+ *   node scripts/set-owner.mjs <github-username>
  *
- * 只改本仓库里的这几个文件；替换幂等，重复跑不会出错。
+ * Only touches the files listed below; the replacement is idempotent, so
+ * re-running it is safe.
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';

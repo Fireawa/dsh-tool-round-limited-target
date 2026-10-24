@@ -1,23 +1,26 @@
 /**
- * verify-live.mjs — 用**真实的** DSH 包验证核心假设（selftest 做不到的部分）
+ * verify-live.mjs — verify the core assumptions against the **real** DSH
+ * packages (the part selftest cannot reach)
  *
  *   node verify-live.mjs
  *
- * selftest.mjs 全是 mock，能证明“插件的逻辑对”，但证明不了两件事：
- *   1. 命令定义能通过 dsh-commands 的真实注册校验；
- *   2. 「agent 作用域的命令压过 preset 作用域」这条优先级真的成立（接管 /goal 全靠它）。
+ * selftest.mjs is all mocks: it proves the logic is right, but not two things:
+ *   1. the command definition passes dsh-commands' real registration checks;
+ *   2. "agent-scope command beats preset-scope command" really holds, and
+ *      shadowing /goal depends on it entirely.
  *
- * 本脚本 import 本机安装的 @deepseek-ai/dsh-commands、cordis、dsh-scope，
- * 造出 preset 作用域 + agent 作用域，跑一遍真实的注册/解析/优先级/执行。
- * 找不到全局包时**静默跳过**（退出码 0），所以在任何机器上都能跑。
+ * This script imports the locally installed @deepseek-ai/dsh-commands, cordis
+ * and dsh-scope, builds a preset scope plus an agent scope, and runs real
+ * registration / resolution / precedence / execution.
+ * Missing global packages make it skip silently (exit 0), so it runs anywhere.
  *
- * 覆盖：
- *   - parseCommand 对 "/goal 3 整理文档" 的切分
- *   - parseCommand 对 "/目标 …" 返回 undefined（中文命令名不存在）
- *   - 本插件的命令定义通过真实 register()（名称/描述/hint 校验）
- *   - 重复注册同名命令会抛错（证明接管必须靠作用域，不能靠 register）
- *   - agent 作用域 > preset 作用域，且 list() 里只有一个 goal
- *   - 真实 handler：/goal 3 x → create(maxGoalRounds=3)，/goal rounds 7 → edit(maxGoalRounds=7)
+ * Covers:
+ *   - parseCommand splitting "/goal 3 tidy the docs"
+ *   - parseCommand returning undefined for "/目标 …" (no such command name)
+ *   - this plugin's definition passing the real register() checks
+ *   - duplicate registration of a name throwing (shadowing needs scopes)
+ *   - agent scope > preset scope, and list() holding exactly one goal
+ *   - the real handler: /goal 3 x -> create(maxGoalRounds=3), /goal rounds 7 -> edit
  */
 
 import { existsSync } from 'node:fs';
@@ -25,7 +28,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 
-/* ---------------- 找本机 DSH 全局包 ---------------- */
+/* ---------------- locate the local DSH packages ---------------- */
 
 const CANDIDATES = [
   process.env.DSH_AI_DIR,
@@ -42,7 +45,7 @@ if (base === undefined) {
 
 const asUrl = (rel) => pathToFileURL(join(base, rel)).href;
 
-/* ---------------- 加载真实实现 ---------------- */
+/* ---------------- load the real implementations ---------------- */
 
 let CommandRuntime, parseCommand, cordis, createScope, bindScopeParent, plugin, goalCommandDefinition;
 try {
@@ -50,14 +53,14 @@ try {
   cordis = await import(asUrl('cordis/lib/index.js'));
   ({ createScope, bindScopeParent } = await import(asUrl('dsh-scope/lib/index.js')));
   plugin = await import(new URL('./index.js', import.meta.url));
-  // 用插件自己的定义工厂做注册校验，避免测试里另抄一份 description/hint 而漂移
+  // use the plugin's own definition factory so the test cannot drift from it
   ({ goalCommandDefinition } = await import(new URL('./lib/command.js', import.meta.url)));
 } catch (error) {
   console.log(`跳过：导入真实包失败（${String(error?.message ?? error)}）`);
   process.exit(0);
 }
 
-/* ---------------- 断言小工具 ---------------- */
+/* ---------------- tiny assertion helpers ---------------- */
 
 let passed = 0;
 const failures = [];
@@ -74,7 +77,7 @@ const checkTrue = (label, condition, detail = '') => {
 
 console.log(`使用 ${base}`);
 
-/* ---------------- 1. parseCommand 的真实行为 ---------------- */
+/* ---------------- 1. real parseCommand behaviour ---------------- */
 
 console.log('— 真实 parseCommand —');
 check('/goal 3 整理文档', parseCommand('/goal 3 整理文档'), { name: 'goal', rawInput: ' 3 整理文档' });
@@ -82,7 +85,7 @@ check('/goal（无参数）', parseCommand('/goal'), { name: 'goal', rawInput: '
 check('/目标 不是命令', parseCommand('/目标 3 整理文档'), undefined);
 check('/Goal 不是命令', parseCommand('/Goal 3 x'), undefined);
 
-/* ---------------- 2. 真实 register 校验 ---------------- */
+/* ---------------- 2. real register checks ---------------- */
 
 console.log('— 真实注册表 —');
 const root = new cordis.Context();
@@ -107,7 +110,7 @@ try {
 }
 checkTrue('同名命令在同一层会被拒绝（所以接管只能靠作用域）', duplicateRejected);
 
-/* ---------------- 3. 作用域优先级：preset vs agent ---------------- */
+/* ---------------- 3. scope precedence: preset vs agent ---------------- */
 
 console.log('— 作用域优先级（接管 /goal 的核心假设）—');
 
@@ -159,7 +162,7 @@ const pluginCtx = {
   },
 };
 
-// 只跑到这里为止的东西：真实注册表 + 真实作用域 + 本插件真实的 apply
+// only up to here is real: real registry + real scopes + this plugin's apply
 const { apply } = plugin;
 apply(pluginCtx, {});
 await new Promise((resolve) => setTimeout(resolve, 300));
@@ -170,12 +173,12 @@ check('list() 里只有一个 goal', runtime.list(agent).filter((d) => d.name ==
 checkTrue('目标里还保留别名 target', runtime.list(agent).some((d) => d.name === 'target'));
 check('接管成功时插件不应报警', warns.filter((message) => message.includes('接管未生效')).length, 0);
 
-// 定义身份 = 客户端认第一方命令的唯一依据（「目标」标签 + 目标图标 + /目标 别名）
+// definition identity = the only signal the client uses: label, icon, alias
 check('接管后的 goal 带内置定义身份', after?.definitionId, '@deepseek-ai/dsh-command-goal');
 check('descriptor 也带（客户端读 descriptor）', runtime.list(agent).find((d) => d.name === 'goal')?.definitionId, '@deepseek-ai/dsh-command-goal');
 check('别名 target 不抢身份', runtime.list(agent).find((d) => d.name === 'target')?.definitionId, undefined);
 
-/* ---------------- 4. 真实 handler 链路 ---------------- */
+/* ---------------- 4. real handler path ---------------- */
 
 console.log('— 真实执行 —');
 const run = async (line) => {
@@ -196,7 +199,7 @@ check('/goal rounds 7 → edit', edited, [{ maxGoalRounds: 7 }]);
 const view = await run('/goal');
 checkTrue('查看含 Status', view.text.includes('Status:'), view.text);
 
-/* ---------------- 结果 ---------------- */
+/* ---------------- result ---------------- */
 
 if (failures.length === 0) {
   console.log(`\n✅ 真实环境验证通过（${passed} 项）`);

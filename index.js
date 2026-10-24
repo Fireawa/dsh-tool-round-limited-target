@@ -1,17 +1,19 @@
 /**
- * dsh-tool-round-limited-target — 给 /goal 加一个轮数
+ * dsh-tool-round-limited-target — add a round limit to /goal
  *
- *   /goal 3 整理文档       最多自动跑 3 轮
- *   /goal 整理文档 3       轮数写末尾也认
- *   /goal rounds 8         只改上限，保留进度
+ *   /goal 3 tidy the docs     at most 3 automatic rounds
+ *   /goal tidy the docs 3     trailing number also accepted
+ *   /goal rounds 8            raise the limit, keep progress
  *
- * 轮数用完由 @deepseek-ai/dsh-goal-round-driver 标成 blocked/code=round-limit
- * 并停止自动继续 —— 这是内核行为，本插件只补「一句话说清轮数」的入口。
+ * The core already does the stopping: @deepseek-ai/dsh-goal-round-driver marks
+ * the goal blocked/code=round-limit once the rounds are used up. This plugin
+ * only adds the "one sentence states the rounds" entry point.
  *
- * 本文件只做装配：注册工具、注册斜杠命令、在 agent 作用域接管 /goal。
- * 解析在 lib/parse.js，配置在 lib/config.js，命令在 lib/command.js，工具在 lib/tool.js。
+ * Wiring only: register the tool, register the slash command, shadow /goal in
+ * the agent scope. Parsing in lib/parse.js, config in lib/config.js, command
+ * in lib/command.js, tool in lib/tool.js.
  *
- * 零依赖：不 import 任何 @deepseek-ai/* 包；definitionId 只是一段字符串。
+ * Zero dependencies: no @deepseek-ai/* imports; definitionId is just a string.
  */
 
 import { normalizeConfig } from './lib/config.js';
@@ -20,23 +22,24 @@ import { createToolDefinition } from './lib/tool.js';
 
 export const name = 'dsh-tool-round-limited-target';
 
-/** tools=注册工具；goals=目标域；agents=校验调用者；commands=斜杠命令。 */
+/** tools=tool registry; goals=goal domain; agents=caller check; commands=slash commands. */
 export const inject = ['tools', 'goals', 'agents', 'commands'];
 
-/** 解析函数是纯函数，转发出去方便自检脚本直接测。 */
+/** Pure parsers, re-exported so the self-test can call them directly. */
 export { parseGoalCommand, parseRoundTarget } from './lib/parse.js';
 
-/** 自检延迟：命令注册是同步的，稍等一拍让作用域合并完成。 */
+/** Self-check delay: registration is sync; let scope merging settle first. */
 const SELF_CHECK_DELAY_MS = 100;
 
-/* ---------- 命令注册：全局 + agent 作用域 ---------- */
+/* ---------- command registration: global + agent scope ---------- */
 
 /**
- * 注册命令：全局 + 每个 agent 作用域。
+ * Register the command globally and in every agent scope.
  *
- * 为什么要分两层：内置 /goal 挂在 agent preset 的作用域里，而命令合并顺序是
- * global → 作用域链（远→近），最近的胜出。所以 agent 自己那一层能压过 preset，
- * 全局那份只是没有 preset 的 agent 的兜底。
+ * Two layers because the built-in /goal lives in the agent preset scope while
+ * commands merge global -> scope chain (far -> near) with the nearest winning.
+ * The agent's own layer therefore beats the preset; the global copy is only a
+ * fallback for agents without a preset.
  */
 function registerGoalCommands(ctx, cfg, log, track) {
   if (typeof ctx.commands?.register !== 'function') {
@@ -87,8 +90,10 @@ function registerGoalCommands(ctx, cfg, log, track) {
       return;
     }
 
-    // 自检：作用域优先级是 DSH 内部约定，万一变了就在日志里点名，而不是静默退回内置版。
-    // 比较 handler 引用（find() 返回的就是注册时那个函数），比描述字符串更难被文案改动骗过。
+    // Self-check: scope precedence is a DSH internal contract. If it ever
+    // changes, say so in the log instead of silently falling back to the
+    // built-in /goal. Comparing the handler reference (find() returns the
+    // registered function) is harder to fool than comparing descriptions.
     setTimeout(() => {
       try {
         const resolved = ctx.commands.find(agent, cfg.commandName);
@@ -114,9 +119,9 @@ function registerGoalCommands(ctx, cfg, log, track) {
   }
 }
 
-/* ---------- 插件主体 ---------- */
+/* ---------- plugin body ---------- */
 
-/** 已注册资源的总 disposer，保证重新 apply 时不重复注册。 */
+/** Disposer for everything registered, so re-apply does not register twice. */
 let ACTIVE = null;
 
 function createLogger(ctx) {
@@ -140,7 +145,7 @@ export function apply(ctx, config) {
     if (typeof dispose === 'function') disposers.push(dispose);
   };
 
-  // 注册失败只 warn：一个工具/命令坏了不该拖垮整个 profile 启动
+  // Registration failures are warnings only: one broken tool must not kill startup
   try {
     track(ctx.tools.register(createToolDefinition(ctx, cfg, log)));
     log.info(`round-limited-target: 已注册工具 ${cfg.toolName}（默认 ${cfg.defaultRounds} 轮，上限 ${cfg.maxAllowedRounds} 轮）`);

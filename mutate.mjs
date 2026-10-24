@@ -1,16 +1,20 @@
 /**
- * mutate.mjs — 变异测试：证明自检「真的会抓错」，不是恒绿
+ * mutate.mjs — mutation testing: prove the self-test really catches bugs
+ * instead of staying green forever.
  *
  *   node mutate.mjs
  *
- * 做法：把插件源码（index.js + lib/）和两个测试脚本复制到临时目录，逐个注入
- * 语义明确的 bug（把 > 改成 <、关掉某条分支、删掉某个校验……），再跑测试：
+ * It copies the plugin sources (index.js + lib/) and both test scripts into a
+ * temp dir, injects one semantically clear bug at a time (> to <, a disabled
+ * branch, a dropped check, ...) and re-runs the tests:
  *
- *   - selftest 应该红（它覆盖逻辑分支）；
- *   - 有 1 个变异专门落在「mock 看不到、真实注册表才看得到」的地方，
- *     selftest 会漏、verify-live 应该红 —— 这就是保留两个脚本的理由。
+ *   - selftest must fail (it covers the logic branches);
+ *   - one mutation targets something mocks cannot see but the real registry
+ *     can, so selftest misses it and verify-live must catch it — that is why
+ *     both scripts exist.
  *
- * 不写任何临时文件到插件目录；临时目录用完即删。全部通过退出码 0。
+ * No temp files are written into the plugin directory; the temp dir is removed
+ * afterwards. Exit code 0 when everything behaves as expected.
  */
 
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -24,7 +28,7 @@ const WORK = join(tmpdir(), `dsh-round-limited-target-mut-${process.pid}`);
 
 const run = (script, cwd) => spawnSync(process.execPath, [script], { cwd, stdio: 'ignore' }).status;
 
-/** 参与变异的源码（与 index.js 的 import 图一致）。 */
+/** Sources under mutation (matches the import graph of index.js). */
 const SOURCES = ['index.js', 'lib/config.js', 'lib/parse.js', 'lib/command.js', 'lib/tool.js'];
 
 const originals = new Map(SOURCES.map((rel) => [rel, readFileSync(join(HERE, rel), 'utf8')]));
@@ -35,7 +39,7 @@ const restoreSources = () => {
 
 const countOccurrences = (haystack, needle) => haystack.split(needle).length - 1;
 
-/** 每个变异：把 file 里的 from 换成 to；from 必须唯一命中，否则跳过并记失败。 */
+/** Each mutation swaps from for to; from must match exactly once, else skip and fail. */
 const MUTATIONS = [
   {
     name: 'M1 轮数上限校验反向（工具）',
@@ -93,7 +97,7 @@ const MUTATIONS = [
   },
 ];
 
-/** 专门落在「mock 看不到」的地方：异步自检误报。selftest 应漏，verify-live 应抓。 */
+/** Targets what mocks cannot see: a false async self-check. selftest must miss it. */
 const LIVE_ONLY = {
   name: 'M9 接管自检误报（恒为真）',
   file: 'index.js',

@@ -1,15 +1,15 @@
 /**
- * selftest.mjs — 不需要 DSH 就能跑的离线自检
+ * selftest.mjs — offline self-check that needs no DSH
  *
  *   node selftest.mjs
  *
- * 覆盖四块：
- *   1. 「目标 + 数字」解析（哪些结尾算轮数、哪些不算）；
- *   2. 工具 round_limited_goal 的注册与 execute 主路径；
- *   3. /goal 命令的语法解析（接管内置版 + 轮数 / rounds / edit / 生命周期）；
- *   4. 命令注册：全局 goal+target、agent 作用域接管。
+ * Four areas:
+ *   1. "objective + number" parsing (which endings count as rounds);
+ *   2. registration and the main execute path of the round_limited_goal tool;
+ *   3. /goal syntax parsing (shadowing the built-in, rounds / edit / lifecycle);
+ *   4. command registration: global goal+target, agent-scope shadowing.
  *
- * 用 mock ctx，不碰真实 DSH、不写任何文件。
+ * Uses a mock ctx: no real DSH, no files written.
  */
 
 import { apply, parseGoalCommand, parseRoundTarget } from './index.js';
@@ -36,7 +36,7 @@ function checkTrue(label, condition, detail = '') {
 }
 
 /* ------------------------------------------------------------------ */
-/* 1. 解析                                                             */
+/* 1. parsing                                                          */
 /* ------------------------------------------------------------------ */
 
 console.log('— 解析：目标 + 数字 —');
@@ -90,7 +90,7 @@ function makeCtx({ existing } = {}) {
     ...overrides,
   });
 
-  /** 模拟 agent：ctx.plugin() 会用一个「agent 作用域 ctx」调用插件的 apply。 */
+  /** Mock agent: ctx.plugin() calls the plugin's apply with an agent-scope ctx. */
   const agent = {
     id: 'agent-1',
     session: { snapshotEvents: () => [] },
@@ -116,7 +116,7 @@ function makeCtx({ existing } = {}) {
       list: () => [agent],
       roots: () => [agent],
     },
-    // 故意不给 sessionProjections：humanTurn 应返回 undefined（放行）
+    // Deliberately no sessionProjections: humanTurn should return undefined (allow)
     get: () => undefined,
     on() {},
     goals: {
@@ -163,7 +163,7 @@ function makeCtx({ existing } = {}) {
 const textOf = (result) => String(result?.content?.[0]?.text ?? '');
 
 /* ------------------------------------------------------------------ */
-/* 3. 工具                                                             */
+/* 3. tool                                                             */
 /* ------------------------------------------------------------------ */
 
 console.log('— 工具：注册 —');
@@ -212,7 +212,7 @@ console.log('— 工具：新建 —');
 }
 
 {
-  // 默认轮数不能超过上限，否则「不写轮数」必然失败
+  // the default must not exceed the cap, or "omit rounds" always fails
   const { ctx, calls, agent } = makeCtx();
   apply(ctx, { defaultRounds: 900, maxAllowedRounds: 500 });
   const def = calls.tool[0];
@@ -285,7 +285,7 @@ const toolExisting = {
 }
 
 {
-  // roots() 不含 agent ⇒ humanTurn 判定为「不是真人这一轮发起」
+  // roots() without the agent => humanTurn reports "not a direct human turn"
   const { ctx, calls, agent } = makeCtx();
   ctx.agents.roots = () => [];
   apply(ctx, {});
@@ -295,7 +295,7 @@ const toolExisting = {
 }
 
 {
-  // 拿不到回合边界（没有 sessionProjections）⇒ 放行，不误杀
+  // no turn boundary available (no sessionProjections) => allow, do not block
   const { ctx, calls, agent } = makeCtx();
   apply(ctx, {});
   const result = await calls.tool[0].execute({ target: '整理文档 3' }, { agent });
@@ -303,7 +303,7 @@ const toolExisting = {
 }
 
 /* ------------------------------------------------------------------ */
-/* 4. /goal 语法                                                       */
+/* 4. /goal syntax                                                     */
 /* ------------------------------------------------------------------ */
 
 console.log('— /goal：语法解析 —');
@@ -345,13 +345,13 @@ console.log('— /goal：注册 —');
   checkTrue('命令有 input.hint', typeof def.input?.hint === 'string' && def.input.hint.length > 0);
   checkTrue('命令名符合 ASCII 约束', /^[a-z][a-z0-9_-]*$/u.test(def.name));
 
-  // 两处必须是同一份实现：全局那份兜底、agent 那份胜出，行为不能分叉
+  // both copies must be one implementation: global fallback, agent copy wins
   const scoped = calls.scopedCommands.find((d) => d.name === 'goal');
   checkTrue('全局与 agent 作用域共用同一 handler', def.handler === scoped?.handler);
   checkTrue('两处描述一致', def.description === scoped?.description);
   checkTrue('命令不声明 attachments（会被明确拒绝，不静默丢）', scoped?.input?.attachments === undefined);
 
-  // 定义身份：客户端靠它把这一行显示成「目标」+ 目标图标，并接受 /目标 作为别名
+  // definition identity: the client renders it as a goal with the goal icon
   check('全局 goal 带内置定义身份', def.definitionId, '@deepseek-ai/dsh-command-goal');
   check('agent 作用域的 goal 也带定义身份', scoped?.definitionId, '@deepseek-ai/dsh-command-goal');
   check('别名 target 不抢定义身份', calls.commands.find((d) => d.name === 'target')?.definitionId, undefined);
@@ -378,7 +378,7 @@ console.log('— /goal：注册 —');
 
 console.log('— /goal：执行 —');
 
-/** 用 agent 作用域里那份（接管版）执行命令，更接近真实链路。 */
+/** Run through the agent-scope copy (the shadowing one), closer to the real path. */
 async function runGoal(calls, agent, rawInput) {
   const def = calls.scopedCommands.find((d) => d.name === 'goal') ?? calls.commands.find((d) => d.name === 'goal');
   return def.handler({ agent, rawInput, attachments: [] });
@@ -482,7 +482,7 @@ const existingGoal = {
 }
 
 {
-  // 已完成的目标上 edit ⇒ 等价于新开一个（与内置 /goal 一致）
+  // edit on a completed goal => behaves like creating a new one (same as built-in)
   const complete = { ...existingGoal, phase: 'complete' };
   const { ctx, calls, agent } = makeCtx({ existing: [complete] });
   apply(ctx, {});
