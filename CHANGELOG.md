@@ -3,6 +3,14 @@
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### Changed
+
+- 源码注释统一改为英文（面向开发者）；工具描述、`/goal` 回显、日志等用户可见文案保持原样。
+- `README.md` / `README.en.md` 补齐「许可证」段落与署名、贡献说明、Node.js 20+ 运行要求。
+- 新增 `.editorconfig`，统一缩进与换行。
+
 ## [1.1.0] - 2026-10-24
 
 ### Added
