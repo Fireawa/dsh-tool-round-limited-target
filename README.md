@@ -1,5 +1,7 @@
 # dsh-tool-round-limited-target（限轮目标）
 
+中文 | [English](README.en.md)
+
 [![CI](https://github.com/Fireawa/dsh-tool-round-limited-target/actions/workflows/ci.yml/badge.svg)](https://github.com/Fireawa/dsh-tool-round-limited-target/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
