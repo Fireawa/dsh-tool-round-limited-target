@@ -12,21 +12,15 @@ Give DSH's `/goal` a round cap: **the number written first is how many rounds it
 /goal 3 clean up the docs     # at most 3 rounds
 ```
 
-Only a leading number sets a cap. Every other form is handed to the official `/goal` semantics unchanged (no cap, deployment default), and never errors.
-
 ## Usage
 
-| Input | Result |
-| --- | --- |
-| `/goal 3 clean up the docs` | at most 3 rounds (number first) |
-| `/goal 3 rounds clean up the docs` | same (`rounds` / `轮` / `次` are optional) |
-| `/goal clean up the docs 3` | official semantics: `3` is just objective text, no cap |
-| `/goal fix bug 42` | official semantics: the objective is "fix bug 42", not 42 rounds |
-| `/goal rounds 8` | raise the cap only, keep the progress |
-| `/goal edit 5 new objective` | change the objective (and optionally the rounds) |
-| `/goal edit new objective` | change the objective only, keep the cap |
-| `/goal pause` / `resume` / `clear` | same as built-in |
-| `/goal` | show status |
+```bash
+/goal 3 clean up the docs     # at most 3 rounds
+```
+
+- The number must come **first** to set a cap; `rounds` / `轮` / `次` are optional (`/goal 3 rounds clean up the docs` is equivalent).
+- A trailing number does not count: in `/goal clean up the docs 3` the 3 is objective text, so the official semantics apply (no cap).
+- Subcommands match the built-in `/goal`: `rounds <n>` raises the cap only, `edit [rounds] <objective>` changes the objective, `pause` / `resume` / `clear`, and no argument shows status.
 
 Once the rounds are used up the goal is automatically marked `blocked` (`code=round-limit`) and never runs an extra round. To continue:
 
@@ -34,8 +28,6 @@ Once the rounds are used up the goal is automatically marked `blocked` (`code=ro
 /goal rounds 8      # raise the cap first
 /goal resume        # then resume
 ```
-
-`/target 3 clean up the docs` works as well — the plugin reuses the built-in command identity, so the icon and the localized label stay unchanged.
 
 ## Install
 
