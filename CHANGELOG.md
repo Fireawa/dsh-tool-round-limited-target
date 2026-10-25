@@ -10,6 +10,7 @@
 - 源码注释统一改为英文（面向开发者）；工具描述、`/goal` 回显、日志等用户可见文案保持原样。
 - `README.md` / `README.en.md` 补齐「许可证」段落与署名、贡献说明、Node.js 20+ 运行要求。
 - 新增 `.editorconfig`，统一缩进与换行。
+- 项目描述（GitHub About 与 `package.json`）措辞统一：明确轮数用完会「自动标为 blocked（round-limit）」，不再用「自动停止」这种含糊说法。
 
 ## [1.1.0] - 2026-10-24
 

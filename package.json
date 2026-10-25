@@ -2,7 +2,7 @@
   "name": "dsh-tool-round-limited-target",
   "version": "1.1.0",
   "type": "module",
-  "description": "给 DSH 的 /goal 加轮数：/goal 3 整理文档 —— 数字就是自动执行的轮数，用完自动停止（round-limit）。",
+  "description": "给 DSH 的 /goal 加轮数：写成的轮数就是最多自动执行的轮数，用完自动标为 blocked（round-limit）。",
   "keywords": [
     "dsh",
     "deepseek-harness",
