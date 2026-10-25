@@ -77,11 +77,6 @@ npm run check          # 全跑
 
 实现只有 `index.js` + `lib/{parse,command,tool,config}.js`，零依赖。
 
-## 贡献
-
-本仓库以自用为主：欢迎用 issue 报问题或讨论用法，但 PR 不保证合并。
-改完请先跑 `npm run check`（离线自检 + 真实环境验证 + 变异测试），或在 PR 描述里贴出结果。
-
 ## 许可证
 
 MIT © [Fireawa](https://github.com/Fireawa)。发布流程见 [PUBLISHING.md](PUBLISHING.md)。

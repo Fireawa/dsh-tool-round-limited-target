@@ -77,11 +77,6 @@ npm run check          # all of the above
 
 The implementation is just `index.js` + `lib/{parse,command,tool,config}.js`, with zero dependencies.
 
-## Contributing
-
-This repo is maintained primarily for the author's own use: issues are welcome for bug reports and usage questions, but pull requests are not guaranteed to be merged.
-Run `npm run check` before opening one (offline self-test + live verification + mutation testing), or paste its output in the PR description.
-
 ## License
 
 MIT © [Fireawa](https://github.com/Fireawa). Release process: see [PUBLISHING.md](PUBLISHING.md).
