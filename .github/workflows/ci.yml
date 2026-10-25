@@ -24,17 +24,22 @@ jobs:
 
       - name: 语法检查
         run: |
-          # 用通配而不是写死文件名：文件被删/新增时不用改 workflow，也不会因空匹配报 MODULE_NOT_FOUND
+          # 用通配而不是写死文件名：文件被删/新增时不用改 workflow。
+          # nullglob 让不匹配的模式展开为空数组，再逐项 -f 检查，避免 MODULE_NOT_FOUND。
           shopt -s nullglob
           files=(index.js lib/*.js *.mjs)
-          if [ ${#files[@]} -eq 0 ]; then
+          checked=0
+          for file in "${files[@]}"; do
+            [ -f "$file" ] || continue
+            echo "check $file"
+            node --check "$file"
+            checked=$((checked + 1))
+          done
+          if [ "$checked" -eq 0 ]; then
             echo "没有找到待检查的源文件" >&2
             exit 1
           fi
-          for file in "${files[@]}"; do
-            echo "check $file"
-            node --check "$file"
-          done
+          echo "checked $checked files"
 
       - name: 离线自检（不依赖 DSH）
         run: node selftest.mjs
