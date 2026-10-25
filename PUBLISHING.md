@@ -5,7 +5,7 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | https://github.com/Fireawa/dsh-tool-round-limited-target |
-| 当前版本 | `1.0.0` —— `package.json` / `CHANGELOG.md` / tag `v1.0.0` 三处一致 |
+| 当前版本 | `1.0.1` —— `package.json` / `CHANGELOG.md` / tag `v1.0.1` 三处一致 |
 | 分发方式 | GitHub（`main` 或指定 tag）+ Release 附件 `*.tgz` |
 | npm | 未发布，README 里不提供 npm 安装命令 |
 
@@ -77,10 +77,10 @@ gh release create vx.y.z --title "vx.y.z — 标题" --generate-notes "dsh-tool-
 dsh plugin --profile web add git+https://github.com/Fireawa/dsh-tool-round-limited-target.git
 
 # B. 锁定版本（推荐，行为可预期）
-dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.0
+dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.1
 
 # C. 离线 tgz（从 Release 下载后指向文件）
-dsh plugin --profile web add ./dsh-tool-round-limited-target-1.0.0.tgz
+dsh plugin --profile web add ./dsh-tool-round-limited-target-1.0.1.tgz
 ```
 
 也可以在 **Web → Plugins → 添加插件** 里粘贴上面的地址。
@@ -109,7 +109,7 @@ dsh plugin --profile web add ./dsh-tool-round-limited-target-1.0.0.tgz
 
 - 本插件依赖两条 DSH 内部约定：**agent 作用域的命令压过 preset 作用域**、**内置 `definitionId` 用于客户端身份**。这两条一变，`verify-live.mjs` 会红，`compat` 每周跑一次就是盯这个。
 - 不写 `engines.dsh`：避免 DSH 一升级就把用户拦在门外；等 API 稳定后再收紧。
-- 版本号：行为/语法变化 → minor；纯修复 → patch；破坏性变化（比如不再接管 `/goal`）→ major。**首个公开版本固定为 `1.0.0`。**
+- 版本号：行为/语法变化 → minor；纯修复 → patch；破坏性变化（比如不再接管 `/goal`）→ major。首个公开版本为 `1.0.0`，之后按下面的规则递增。
 - 每次发版都要做到三处一致：`package.json` 的 `version`、`CHANGELOG.md` 的小节标题、git tag 名。
 
 ---

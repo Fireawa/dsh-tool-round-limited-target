@@ -42,7 +42,7 @@ dsh plugin --profile web add git+https://github.com/Fireawa/dsh-tool-round-limit
 Pin a version (recommended, predictable behaviour):
 
 ```bash
-dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.0
+dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.1
 ```
 
 You can also use Web → **Plugins** → add plugin → paste the URL above (or a local path). **Restart `dsh web`** afterwards.
