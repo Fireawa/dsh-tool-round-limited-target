@@ -4,8 +4,9 @@
 
 [![CI](https://github.com/Fireawa/dsh-tool-round-limited-target/actions/workflows/ci.yml/badge.svg)](https://github.com/Fireawa/dsh-tool-round-limited-target/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/Fireawa/dsh-tool-round-limited-target)](https://github.com/Fireawa/dsh-tool-round-limited-target/releases)
 
-给 DSH 的 `/goal` 加一个数字：**数字就是自动执行的轮数，用完自动停**。
+给 DSH 的 `/goal` 加一个轮数上限：**写在最前面的数字就是最多自动执行的轮数，用完自动停**。
 
 ```bash
 /goal 3 整理文档      # 最多 3 轮
@@ -40,8 +41,16 @@
 
 要求：Node.js 20+，且已装好 DSH。
 
+跟随 `main`（会随仓库最新提交变化）：
+
 ```bash
 dsh plugin --profile web add git+https://github.com/Fireawa/dsh-tool-round-limited-target.git
+```
+
+锁定版本（推荐，行为可预期）：
+
+```bash
+dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.0
 ```
 
 也可以 Web → **Plugins** → 添加插件 → 粘贴上面的地址（或本地路径）。装完**重启 `dsh web`**。

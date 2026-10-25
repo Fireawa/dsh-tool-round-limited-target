@@ -4,8 +4,9 @@
 
 [![CI](https://github.com/Fireawa/dsh-tool-round-limited-target/actions/workflows/ci.yml/badge.svg)](https://github.com/Fireawa/dsh-tool-round-limited-target/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/Fireawa/dsh-tool-round-limited-target)](https://github.com/Fireawa/dsh-tool-round-limited-target/releases)
 
-Give DSH's `/goal` a number: **the number is how many rounds it may run automatically — and it stops by itself once they are used up.**
+Give DSH's `/goal` a round cap: **the number written first is how many rounds it may run automatically — and it stops by itself once they are used up.**
 
 ```bash
 /goal 3 clean up the docs     # at most 3 rounds
@@ -40,8 +41,16 @@ Once the rounds are used up the goal is automatically marked `blocked` (`code=ro
 
 Requires Node.js 20+ and a working DSH installation.
 
+Track `main` (moves with the latest commit):
+
 ```bash
 dsh plugin --profile web add git+https://github.com/Fireawa/dsh-tool-round-limited-target.git
+```
+
+Pin a version (recommended, predictable behaviour):
+
+```bash
+dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.0
 ```
 
 You can also use Web → **Plugins** → add plugin → paste the URL above (or a local path). **Restart `dsh web`** afterwards.
