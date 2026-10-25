@@ -42,7 +42,7 @@ dsh plugin --profile web add git+https://github.com/Fireawa/dsh-tool-round-limit
 锁定版本（推荐，行为可预期）：
 
 ```bash
-dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.1
+dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.2
 ```
 
 也可以 Web → **Plugins** → 添加插件 → 粘贴上面的地址（或本地路径）。装完**重启 `dsh web`**。

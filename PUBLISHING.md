@@ -5,7 +5,7 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | https://github.com/Fireawa/dsh-tool-round-limited-target |
-| 当前版本 | `1.0.1` —— `package.json` / `CHANGELOG.md` / tag `v1.0.1` 三处一致 |
+| 当前版本 | `1.0.2` —— `package.json` / `CHANGELOG.md` / tag `v1.0.2` 三处一致 |
 | 分发方式 | GitHub（`main` 或指定 tag）+ Release 附件 `*.tgz` |
 | npm | 未发布，README 里不提供 npm 安装命令 |
 
@@ -77,10 +77,10 @@ gh release create vx.y.z --title "vx.y.z — 标题" --generate-notes "dsh-tool-
 dsh plugin --profile web add git+https://github.com/Fireawa/dsh-tool-round-limited-target.git
 
 # B. 锁定版本（推荐，行为可预期）
-dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.1
+dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.2
 
 # C. 离线 tgz（从 Release 下载后指向文件）
-dsh plugin --profile web add ./dsh-tool-round-limited-target-1.0.1.tgz
+dsh plugin --profile web add ./dsh-tool-round-limited-target-1.0.2.tgz
 ```
 
 也可以在 **Web → Plugins → 添加插件** 里粘贴上面的地址。
