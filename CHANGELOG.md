@@ -3,14 +3,18 @@
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased]
+## [2.0.0] - 2026-10-25
 
 ### Changed
 
+- **BREAKING** 限轮写法收敛为一种：只有「轮数在最前面」（`/goal 5 <目标>`）会设上限。以前 `/goal 整理文档 5` 会被当成 5 轮，现在末尾数字属于目标文本，命令走官方 `/goal` 语义（不设上限），工具走 `defaultRounds`。
+- **BREAKING** `trailingRounds` 默认值由 `true` 改为 `false`；要恢复旧行为，在 `cordis.patch.yml` 里显式写 `trailingRounds: true`。
+- `round_limited_goal` 同步：`target="整理文档 3"` 不再当 3 轮，末尾数字算目标文本；轮数只认 `target="3 整理文档"` 或 `rounds` 参数。
+- `selftest.mjs` 调整为 126 项（新增末尾数字回落官方语义、`edit` 末尾数字、工具末尾数字等用例）。
 - 源码注释统一改为英文（面向开发者）；工具描述、`/goal` 回显、日志等用户可见文案保持原样。
-- `README.md` / `README.en.md` 补齐「许可证」段落与署名、贡献说明、Node.js 20+ 运行要求。
+- `README.md` / `README.en.md` 补齐「许可证」段落与署名、贡献说明、Node.js 20+ 运行要求，并更新用法表（末尾数字不再算轮数）。
 - 新增 `.editorconfig`，统一缩进与换行。
-- 项目描述（GitHub About 与 `package.json`）措辞统一：明确轮数用完会「自动标为 blocked（round-limit）」，不再用「自动停止」这种含糊说法。
+- 项目描述（GitHub About 与 `package.json`）措辞统一：明确轮数用完会「自动标为 blocked（round-limit）」。
 
 ## [1.1.0] - 2026-10-24
 

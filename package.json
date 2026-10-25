@@ -1,6 +1,6 @@
 {
   "name": "dsh-tool-round-limited-target",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "type": "module",
   "description": "给 DSH 的 /goal 加轮数：写成的轮数就是最多自动执行的轮数，用完自动标为 blocked（round-limit）。",
   "keywords": [
@@ -47,7 +47,7 @@
   },
   "meta": {
     "title": "限轮目标（/goal 加轮数）",
-    "description": "/goal 3 整理文档 —— 在原版 /goal 上只多一个数字，表示最多自动跑几轮；第 N 轮做完自动停止。clear/pause/resume/edit 全部保留，另加 /goal rounds <n>。"
+    "description": "/goal 5 整理文档 —— 只有轮数写在最前面才会设上限；其余写法按官方 /goal 语义（不设上限）。第 N 轮做完自动标为 blocked（round-limit）。clear/pause/resume/edit 全部保留，另加 /goal rounds <n>。"
   },
   "dsh": {
     "bundle": {

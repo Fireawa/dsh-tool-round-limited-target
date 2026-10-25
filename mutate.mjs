@@ -48,10 +48,10 @@ const MUTATIONS = [
     to: 'if (rounds < cfg.maxAllowedRounds) {',
   },
   {
-    name: 'M2 末尾轮数解析失效',
+    name: 'M2 末尾轮数不受配置约束（默认也拆）',
     file: 'lib/parse.js',
-    from: 'if (cfg.trailingRounds !== false) {',
-    to: 'if (false) {',
+    from: 'if (cfg.trailingRounds === true) {',
+    to: 'if (true) {',
   },
   {
     name: 'M3 不再接管 /goal',

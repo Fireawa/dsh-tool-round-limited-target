@@ -176,7 +176,7 @@ console.log('— 工具：注册 —');
   check('工具名', def.name, 'round_limited_goal');
   check('参数是对象根 schema', def.parameters?.type, 'object');
   check('target 必填', def.parameters?.required, ['target']);
-  checkTrue('描述里写了「目标 + 数字」用法', def.description.includes('整理文档 3'));
+  checkTrue('描述里写了轮数用法', def.description.includes('rounds'), def.description);
   checkTrue('描述里写了 round-limit 停止规则', def.description.includes('round-limit'));
 }
 
@@ -186,9 +186,9 @@ console.log('— 工具：新建 —');
   const { ctx, calls, agent } = makeCtx();
   apply(ctx, {});
   const def = calls.tool[0];
-  const result = await def.execute({ target: '整理文档 3' }, { agent });
+  const result = await def.execute({ target: '3 整理文档' }, { agent });
   check('未报错', result.isError, false);
-  check('轮数取自末尾数字', calls.create[0], { objective: '整理文档', maxGoalRounds: 3 });
+  check('轮数取自开头的数字', calls.create[0], { objective: '整理文档', maxGoalRounds: 3 });
   const text = textOf(result);
   checkTrue('回显目标', text.includes('目标：整理文档'), text);
   checkTrue('回显轮数', text.includes('最多 3 轮'), text);
@@ -196,11 +196,21 @@ console.log('— 工具：新建 —');
 }
 
 {
+  // trailing digits are objective text (official semantics), not an error and not rounds
+  const { ctx, calls, agent } = makeCtx();
+  apply(ctx, {});
+  const def = calls.tool[0];
+  const result = await def.execute({ target: '整理文档 3' }, { agent });
+  check('末尾数字不报错', result.isError, false);
+  check('末尾数字算目标文本', calls.create[0], { objective: '整理文档 3', maxGoalRounds: 3 });
+}
+
+{
   const { ctx, calls, agent } = makeCtx();
   apply(ctx, {});
   const def = calls.tool[0];
   await def.execute({ target: '整理文档 3', rounds: 7 }, { agent });
-  check('显式 rounds 优先', calls.create[0], { objective: '整理文档', maxGoalRounds: 7 });
+  check('显式 rounds 优先', calls.create[0], { objective: '整理文档 3', maxGoalRounds: 7 });
 }
 
 {
@@ -240,7 +250,7 @@ console.log('— 工具：新建 —');
   const { ctx, calls, agent } = makeCtx();
   apply(ctx, {});
   const def = calls.tool[0];
-  const result = await def.execute({ target: '整理文档 999' }, { agent });
+  const result = await def.execute({ target: '整理文档', rounds: 999 }, { agent });
   check('超过上限报错', result.isError, true);
   check('没有建目标', calls.create.length, 0);
 }
@@ -272,12 +282,12 @@ const toolExisting = {
   apply(ctx, {});
   const def = calls.tool[0];
 
-  const refused = await def.execute({ target: '新目标 2' }, { agent });
+  const refused = await def.execute({ target: '2 新目标' }, { agent });
   check('已有目标时不覆盖', refused.isError, true);
   checkTrue('提示 replace=true', textOf(refused).includes('replace=true'), textOf(refused));
   check('没有建目标', calls.create.length, 0);
 
-  const replaced = await def.execute({ target: '新目标 2', replace: true }, { agent });
+  const replaced = await def.execute({ target: '2 新目标', replace: true }, { agent });
   check('replace 时清旧目标', calls.clear[0], { id: 'goal-old', revision: 4 });
   check('replace 后新建', calls.create[0], { objective: '新目标', maxGoalRounds: 2 });
   check('replace 未报错', replaced.isError, false);
@@ -289,7 +299,7 @@ const toolExisting = {
   const { ctx, calls, agent } = makeCtx();
   ctx.agents.roots = () => [];
   apply(ctx, {});
-  const result = await calls.tool[0].execute({ target: '整理文档 3' }, { agent });
+  const result = await calls.tool[0].execute({ target: '3 整理文档' }, { agent });
   check('非真人回合的调用被拒绝', result.isError, true);
   check('没有建目标', calls.create.length, 0);
 }
@@ -298,7 +308,7 @@ const toolExisting = {
   // no turn boundary available (no sessionProjections) => allow, do not block
   const { ctx, calls, agent } = makeCtx();
   apply(ctx, {});
-  const result = await calls.tool[0].execute({ target: '整理文档 3' }, { agent });
+  const result = await calls.tool[0].execute({ target: '3 整理文档' }, { agent });
   check('无法判断权限时放行', result.isError, false);
 }
 
@@ -313,19 +323,21 @@ check('/goal 3 目标', parseGoalCommand('3 整理文档'), { kind: 'create', ob
 check('/goal 3轮 目标', parseGoalCommand('3轮 整理文档'), { kind: 'create', objective: '整理文档', rounds: 3 });
 check('/goal 3: 目标', parseGoalCommand('3: 整理文档'), { kind: 'create', objective: '整理文档', rounds: 3 });
 check('/goal 目标（无轮数）', parseGoalCommand('整理文档'), { kind: 'create', objective: '整理文档', rounds: null });
-check('/goal 目标 3（轮数在末尾）', parseGoalCommand('整理文档 3'), { kind: 'create', objective: '整理文档', rounds: 3 });
+check('/goal 目标 3（默认不拆末尾）', parseGoalCommand('整理文档 3'), { kind: 'create', objective: '整理文档 3', rounds: null });
+check('/goal 目标 3（trailingRounds:true 旧写法）', parseGoalCommand('整理文档 3', { trailingRounds: true }), { kind: 'create', objective: '整理文档', rounds: 3 });
 check('/goal 引号', parseGoalCommand('3 "整理文档"'), { kind: 'create', objective: '整理文档', rounds: 3 });
 check('/goal clear', parseGoalCommand('clear'), { kind: 'clear' });
 check('/goal pause', parseGoalCommand('pause'), { kind: 'pause' });
 check('/goal resume', parseGoalCommand('resume'), { kind: 'resume' });
 check('/goal edit 空', parseGoalCommand('edit'), { kind: 'invalid-edit' });
 check('/goal edit 目标', parseGoalCommand('edit 新目标'), { kind: 'edit', objective: '新目标', rounds: null });
-check('/goal edit 目标 5', parseGoalCommand('edit 新目标 5'), { kind: 'edit', objective: '新目标', rounds: 5 });
+check('/goal edit 目标 5（默认不拆末尾）', parseGoalCommand('edit 新目标 5'), { kind: 'edit', objective: '新目标 5', rounds: null });
+check('/goal edit 目标 5（trailingRounds:true）', parseGoalCommand('edit 新目标 5', { trailingRounds: true }), { kind: 'edit', objective: '新目标', rounds: 5 });
 check('/goal edit 5 目标', parseGoalCommand('edit 5 新目标'), { kind: 'edit', objective: '新目标', rounds: 5 });
 check('/goal rounds 8', parseGoalCommand('rounds 8'), { kind: 'rounds', rounds: 8 });
 check('/goal rounds 空', parseGoalCommand('rounds'), { kind: 'invalid-rounds' });
 check('/goal rounds abc', parseGoalCommand('rounds abc'), { kind: 'invalid-rounds' });
-check('trailingRounds=false 时不拆末尾', parseGoalCommand('整理文档 3', { trailingRounds: false }), { kind: 'create', objective: '整理文档 3', rounds: null });
+check('trailingRounds 显式 false（与默认一致）', parseGoalCommand('整理文档 3', { trailingRounds: false }), { kind: 'create', objective: '整理文档 3', rounds: null });
 check('/goal 中文引号', parseGoalCommand('3 「整理文档」'), { kind: 'create', objective: '整理文档', rounds: 3 });
 check('/goal 0 轮（交给执行层拒绝）', parseGoalCommand('0 目标'), { kind: 'create', objective: '目标', rounds: 0 });
 check('/goal 7 位数字不当轮数', parseGoalCommand('1234567 目标'), { kind: 'create', objective: '1234567 目标', rounds: null });
@@ -403,6 +415,15 @@ async function runGoal(calls, agent, rawInput) {
 }
 
 {
+  // official semantics: a trailing number is objective text, not a round cap
+  const { ctx, calls, agent } = makeCtx();
+  apply(ctx, {});
+  const result = await runGoal(calls, agent, ' 修复 bug 42');
+  check('末尾数字不报错', result.kind, 'success');
+  check('末尾数字算目标文本，不设上限', calls.create[0], { objective: '修复 bug 42' });
+}
+
+{
   const { ctx, calls, agent } = makeCtx();
   apply(ctx, {});
   const result = await runGoal(calls, agent, ' 3');
@@ -475,10 +496,18 @@ const existingGoal = {
 {
   const { ctx, calls, agent } = makeCtx({ existing: [existingGoal] });
   apply(ctx, {});
-  const edited = await runGoal(calls, agent, ' edit 新目标 5');
+  const edited = await runGoal(calls, agent, ' edit 5 新目标');
   check('edit 目标 + 轮数', calls.edit[0], { ref: { id: 'goal-old', revision: 4 }, request: { objective: '新目标', maxGoalRounds: 5 } });
   check('edit kind=success', edited.kind, 'success');
   check('edit 不新建目标', calls.create.length, 0);
+}
+
+{
+  const { ctx, calls, agent } = makeCtx({ existing: [existingGoal] });
+  apply(ctx, {});
+  const result = await runGoal(calls, agent, ' edit 新目标 5');
+  check('edit 末尾数字不报错', result.kind, 'success');
+  check('edit 末尾数字算目标文本', calls.edit[0], { ref: { id: 'goal-old', revision: 4 }, request: { objective: '新目标 5' } });
 }
 
 {
@@ -486,7 +515,7 @@ const existingGoal = {
   const complete = { ...existingGoal, phase: 'complete' };
   const { ctx, calls, agent } = makeCtx({ existing: [complete] });
   apply(ctx, {});
-  const result = await runGoal(calls, agent, ' edit 新目标 4');
+  const result = await runGoal(calls, agent, ' edit 4 新目标');
   check('complete 时 edit 变成 create', calls.create[0], { objective: '新目标', maxGoalRounds: 4 });
   check('complete 时不再走 edit', calls.edit.length, 0);
   check('complete 时 kind=success', result.kind, 'success');

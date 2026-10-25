@@ -11,15 +11,19 @@ Give DSH's `/goal` a number: **the number is how many rounds it may run automati
 /goal 3 clean up the docs     # at most 3 rounds
 ```
 
+Only a leading number sets a cap. Every other form is handed to the official `/goal` semantics unchanged (no cap, deployment default), and never errors.
+
 ## Usage
 
 | Input | Result |
 | --- | --- |
 | `/goal 3 clean up the docs` | at most 3 rounds (number first) |
-| `/goal clean up the docs 3` | same (a trailing number is accepted too) |
 | `/goal 3 rounds clean up the docs` | same (`rounds` / `轮` / `次` are optional) |
+| `/goal clean up the docs 3` | official semantics: `3` is just objective text, no cap |
+| `/goal fix bug 42` | official semantics: the objective is "fix bug 42", not 42 rounds |
 | `/goal rounds 8` | raise the cap only, keep the progress |
-| `/goal edit new objective 5` | change the objective (and optionally the rounds) |
+| `/goal edit 5 new objective` | change the objective (and optionally the rounds) |
+| `/goal edit new objective` | change the objective only, keep the cap |
 | `/goal pause` / `resume` / `clear` | same as built-in |
 | `/goal` | show status |
 
@@ -45,7 +49,7 @@ For local development just `link:` the checkout.
 
 ## Tool
 
-`round_limited_goal(target, rounds?, replace?)`: the natural-language entry point for the model — `target="clean up the docs 3"` means 3 rounds.
+`round_limited_goal(target, rounds?, replace?)`: the natural-language entry point for the model — `target="3 clean up the docs"` or `rounds=3` means 3 rounds; in `target="clean up the docs 3"` the 3 is objective text and the default 3 rounds apply.
 
 ## Configuration
 
@@ -55,7 +59,7 @@ For local development just `link:` the checkout.
 commandName: goal            # primary command name
 aliasCommandName: target     # alias, '' disables it
 shadowGoalPerAgent: true     # false = fall back to the built-in /goal
-trailingRounds: true         # false = only "3 <objective>", avoids "fix bug 42"
+trailingRounds: false        # only "3 <objective>"; trailing digits stay objective text
 defaultRounds: 3             # used when the tool call omits rounds
 maxAllowedRounds: 500
 requireDirectHuman: true     # only a direct human turn may create a goal
@@ -64,7 +68,7 @@ requireDirectHuman: true     # only a direct human turn may create a goal
 ## Self-check
 
 ```bash
-node selftest.mjs      # 118 checks, offline
+node selftest.mjs      # 126 checks, offline
 node verify-live.mjs   # 20 checks, needs a local DSH (skips otherwise)
 node mutate.mjs        # mutation testing
 npm run check          # all of the above
