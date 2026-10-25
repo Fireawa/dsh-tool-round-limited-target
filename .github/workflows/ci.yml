@@ -24,7 +24,15 @@ jobs:
 
       - name: 语法检查
         run: |
-          for file in index.js lib/*.js selftest.mjs verify-live.mjs mutate.mjs; do
+          # 用通配而不是写死文件名：文件被删/新增时不用改 workflow，也不会因空匹配报 MODULE_NOT_FOUND
+          shopt -s nullglob
+          files=(index.js lib/*.js *.mjs)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "没有找到待检查的源文件" >&2
+            exit 1
+          fi
+          for file in "${files[@]}"; do
+            echo "check $file"
             node --check "$file"
           done
 
