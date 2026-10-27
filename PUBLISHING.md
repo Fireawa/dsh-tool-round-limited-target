@@ -5,7 +5,7 @@
 | 项 | 值 |
 | --- | --- |
 | 仓库 | https://github.com/Fireawa/dsh-tool-round-limited-target |
-| 当前版本 | `1.0.2` —— `package.json` / `CHANGELOG.md` / tag `v1.0.2` 三处一致 |
+| 当前版本 | `1.0.3` —— `package.json` / `CHANGELOG.md` / tag `v1.0.3` 三处一致 |
 | 分发方式 | GitHub（`main` 或指定 tag）+ Release 附件 `*.tgz` |
 | npm | 未发布，README 里不提供 npm 安装命令 |
 
@@ -20,7 +20,7 @@
 ## 1. 改完代码先跑自检
 
 ```powershell
-node selftest.mjs      # 126 项，纯离线，必须全绿
+node selftest.mjs      # 136 项，纯离线，必须全绿
 node verify-live.mjs   # 20 项；本机没有 DSH 包时自动跳过（退出码 0）
 node mutate.mjs        # 变异测试；需要 verify-live 能真的跑起来
 ```
@@ -77,10 +77,10 @@ gh release create vx.y.z --title "vx.y.z — 标题" --generate-notes "dsh-tool-
 dsh plugin --profile web add git+https://github.com/Fireawa/dsh-tool-round-limited-target.git
 
 # B. 锁定版本（推荐，行为可预期）
-dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.2
+dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.3
 
 # C. 离线 tgz（从 Release 下载后指向文件）
-dsh plugin --profile web add ./dsh-tool-round-limited-target-1.0.2.tgz
+dsh plugin --profile web add ./dsh-tool-round-limited-target-1.0.3.tgz
 ```
 
 也可以在 **Web → Plugins → 添加插件** 里粘贴上面的地址。
@@ -101,7 +101,7 @@ dsh plugin --profile web add ./dsh-tool-round-limited-target-1.0.2.tgz
 | Actions → General | 保持默认（允许运行 workflow） |
 | Branches | 个人项目可不设保护；要设就保护 `main` 并要求 CI 通过 |
 
-`ci` 每次 push / PR 跑：语法检查 + 126 项离线自检；`compat` 每周一拉最新版 DSH 跑真实环境验证 + 变异测试，用来尽早发现 DSH 升级导致的失效。
+`ci` 每次 push / PR 跑：语法检查 + 136 项离线自检；`compat` 每周一拉最新版 DSH 跑真实环境验证 + 变异测试，用来尽早发现 DSH 升级导致的失效。
 
 ---
 
@@ -116,7 +116,7 @@ dsh plugin --profile web add ./dsh-tool-round-limited-target-1.0.2.tgz
 
 ## 6. 发布前 checklist
 
-- [ ] `node selftest.mjs` 全绿（126 项）
+- [ ] `node selftest.mjs` 全绿（136 项）
 - [ ] `node verify-live.mjs` 在装有 DSH 的机器上全绿（20 项）
 - [ ] `node mutate.mjs` 全绿（10 个变异全部被抓）
 - [ ] `package.json` 的 `version`、`CHANGELOG.md` 标题、tag 名三处一致

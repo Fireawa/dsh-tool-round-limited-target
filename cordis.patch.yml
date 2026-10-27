@@ -21,6 +21,7 @@
         shadowGoalPerAgent: true     # false = 退回内置 /goal 行为
         trailingRounds: false        # 只认「/goal 5 目标」；末尾数字按官方语义算目标文本
         toolName: round_limited_goal # 给模型用的工具
-        defaultRounds: 3             # 工具没写轮数时用这个（超过 maxAllowedRounds 时按上限）
+        defaultRounds: 3             # 仅当 requireExplicitRounds=false 时才用它兜底
         maxAllowedRounds: 500        # 超过直接报错，不夹断
         requireDirectHuman: true     # 工具沿用内置 create_goal 的权限策略
+        requireExplicitRounds: true  # 没有显式轮数就拒绝建目标（防止模型在普通对话里误触发）

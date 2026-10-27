@@ -42,7 +42,7 @@ dsh plugin --profile web add git+https://github.com/Fireawa/dsh-tool-round-limit
 锁定版本（推荐，行为可预期）：
 
 ```bash
-dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.2
+dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.3
 ```
 
 也可以 Web → **Plugins** → 添加插件 → 粘贴上面的地址（或本地路径）。装完**重启 `dsh web`**。
@@ -50,7 +50,7 @@ dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.2
 
 ## 工具
 
-`round_limited_goal(target, rounds?, replace?)`：给模型用的自然语言入口。`target="3 整理文档"` 或 `rounds=3` 就是 3 轮；`target="整理文档 3"` 里的 3 算目标文本，用默认 3 轮。
+`round_limited_goal(target, rounds?, replace?)`：给模型用的自然语言入口。`target="3 整理文档"` 或 `rounds=3` 就是 3 轮；**没有显式轮数时直接拒绝**，避免模型在普通对话里凭空建出一个限轮目标。
 
 ## 配置
 
@@ -61,15 +61,16 @@ commandName: goal            # 主命令名
 aliasCommandName: target     # 别名，'' 关闭
 shadowGoalPerAgent: true     # false = 退回内置 /goal
 trailingRounds: false        # 只认「3 目标」；末尾数字按官方语义算目标文本
-defaultRounds: 3             # 工具没写轮数时用
+defaultRounds: 3             # 仅在 requireExplicitRounds=false 时兜底
 maxAllowedRounds: 500
 requireDirectHuman: true     # 只允许真人回合创建
+requireExplicitRounds: true  # 没有显式轮数就拒绝建目标（防模型误触发）
 ```
 
 ## 自检
 
 ```bash
-node selftest.mjs      # 126 项，离线
+node selftest.mjs      # 136 项，离线
 node verify-live.mjs   # 20 项，需要本机 DSH（没有会跳过）
 node mutate.mjs        # 变异测试
 npm run check          # 全跑

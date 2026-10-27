@@ -42,7 +42,7 @@ dsh plugin --profile web add git+https://github.com/Fireawa/dsh-tool-round-limit
 Pin a version (recommended, predictable behaviour):
 
 ```bash
-dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.2
+dsh plugin --profile web add github:Fireawa/dsh-tool-round-limited-target#v1.0.3
 ```
 
 You can also use Web → **Plugins** → add plugin → paste the URL above (or a local path). **Restart `dsh web`** afterwards.
@@ -50,7 +50,7 @@ For local development just `link:` the checkout.
 
 ## Tool
 
-`round_limited_goal(target, rounds?, replace?)`: the natural-language entry point for the model — `target="3 clean up the docs"` or `rounds=3` means 3 rounds; in `target="clean up the docs 3"` the 3 is objective text and the default 3 rounds apply.
+`round_limited_goal(target, rounds?, replace?)`: the natural-language entry point for the model — `target="3 clean up the docs"` or `rounds=3` means 3 rounds. **A call without an explicit round count is refused**, so the model cannot conjure a capped goal out of an ordinary request.
 
 ## Configuration
 
@@ -61,15 +61,16 @@ commandName: goal            # primary command name
 aliasCommandName: target     # alias, '' disables it
 shadowGoalPerAgent: true     # false = fall back to the built-in /goal
 trailingRounds: false        # only "3 <objective>"; trailing digits stay objective text
-defaultRounds: 3             # used when the tool call omits rounds
+defaultRounds: 3             # fallback only when requireExplicitRounds=false
 maxAllowedRounds: 500
 requireDirectHuman: true     # only a direct human turn may create a goal
+requireExplicitRounds: true  # refuse a call that omits rounds (prevents accidental goals)
 ```
 
 ## Self-check
 
 ```bash
-node selftest.mjs      # 126 checks, offline
+node selftest.mjs      # 136 checks, offline
 node verify-live.mjs   # 20 checks, needs a local DSH (skips otherwise)
 node mutate.mjs        # mutation testing
 npm run check          # all of the above

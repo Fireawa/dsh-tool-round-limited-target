@@ -1,6 +1,6 @@
 {
   "name": "dsh-tool-round-limited-target",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "description": "给 DSH 的 /goal 加轮数：写成的轮数就是最多自动执行的轮数，用完自动标为 blocked（round-limit）。",
   "keywords": [

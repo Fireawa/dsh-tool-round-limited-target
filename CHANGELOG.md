@@ -3,6 +3,18 @@
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.0.3] - 2026-10-27
+
+### 修复
+
+- **没有输入 `/goal` 也会被错误启用**。根因是 `round_limited_goal` 工具在「调用方没给轮数」时用 `defaultRounds`（默认 3）兜底建目标：只要模型认为用户要的是多步骤任务就会调用它，于是在普通对话里凭空出现一个 3 轮上限的目标，跑完还会被标成 `blocked`。
+- 新增配置 `requireExplicitRounds`（默认 `true`）：没有显式轮数（目标开头的数字，或 `rounds` 参数）时**直接拒绝创建**，并提示改用 `create_goal`。`trailingRounds: true` 时末尾数字也算显式。
+- 工具描述改写：开头就写明「只在用户明确要求轮数上限时才调用」，去掉「不写轮数就默认 3 轮」的说法。
+
+### 自检
+
+- `selftest.mjs` 增至 136 项：覆盖「无轮数被拒绝且不建目标」「关闭 requireExplicitRounds 后回落到 defaultRounds」「末尾数字在默认配置下被拒绝」。
+
 ## [1.0.2] - 2026-10-25
 
 ### 修复

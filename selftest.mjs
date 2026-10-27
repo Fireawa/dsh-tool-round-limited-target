@@ -196,13 +196,23 @@ console.log('— 工具：新建 —');
 }
 
 {
-  // trailing digits are objective text (official semantics), not an error and not rounds
+  // 末尾数字属于目标文本；默认配置下它不算「显式轮数」，所以整句会被拒绝
   const { ctx, calls, agent } = makeCtx();
   apply(ctx, {});
   const def = calls.tool[0];
+  const refused = await def.execute({ target: '整理文档 3' }, { agent });
+  check('末尾数字不算显式轮数 → 拒绝', refused.isError, true);
+  check('末尾数字不会建目标', calls.create.length, 0);
+}
+
+{
+  // 关掉 requireExplicitRounds 后，末尾数字按「目标文本 + 默认轮数」处理
+  const { ctx, calls, agent } = makeCtx();
+  apply(ctx, { requireExplicitRounds: false });
+  const def = calls.tool[0];
   const result = await def.execute({ target: '整理文档 3' }, { agent });
-  check('末尾数字不报错', result.isError, false);
-  check('末尾数字算目标文本', calls.create[0], { objective: '整理文档 3', maxGoalRounds: 3 });
+  check('关闭后末尾数字不报错', result.isError, false);
+  check('关闭后末尾数字算目标文本', calls.create[0], { objective: '整理文档 3', maxGoalRounds: 3 });
 }
 
 {
@@ -215,19 +225,35 @@ console.log('— 工具：新建 —');
 
 {
   const { ctx, calls, agent } = makeCtx();
-  apply(ctx, { defaultRounds: 5 });
+  apply(ctx, { defaultRounds: 5, requireExplicitRounds: false });
   const def = calls.tool[0];
   await def.execute({ target: '整理文档' }, { agent });
-  check('没写轮数用 defaultRounds', calls.create[0], { objective: '整理文档', maxGoalRounds: 5 });
+  check('关掉 requireExplicitRounds 后才用 defaultRounds', calls.create[0], { objective: '整理文档', maxGoalRounds: 5 });
 }
 
 {
   // the default must not exceed the cap, or "omit rounds" always fails
   const { ctx, calls, agent } = makeCtx();
-  apply(ctx, { defaultRounds: 900, maxAllowedRounds: 500 });
+  apply(ctx, { defaultRounds: 900, maxAllowedRounds: 500, requireExplicitRounds: false });
   const def = calls.tool[0];
   await def.execute({ target: '整理文档' }, { agent });
   check('defaultRounds 超过上限时按上限用', calls.create[0], { objective: '整理文档', maxGoalRounds: 500 });
+}
+
+{
+  // 默认行为：没有显式轮数就不许建目标，否则模型会在普通对话里凭空造出一个限轮目标
+  const { ctx, calls, agent } = makeCtx();
+  apply(ctx, {});
+  const def = calls.tool[0];
+  for (const target of ['整理文档', '帮我看看这个仓库', '修复 bug 42']) {
+    calls.create.length = 0;
+    const refused = await def.execute({ target }, { agent });
+    check(`无轮数被拒绝：${target}`, refused.isError, true);
+    check(`无轮数不建目标：${target}`, calls.create.length, 0);
+  }
+  const created = await def.execute({ target: '整理文档', rounds: 3 }, { agent });
+  check('显式 rounds 仍然可建', created.isError, false);
+  check('显式 rounds 的轮数', calls.create[0], { objective: '整理文档', maxGoalRounds: 3 });
 }
 
 {
