@@ -20,10 +20,15 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # DSH 的 engines 要求 node >= 24.9，用 22 会 EBADENGINE（装得上但跑不顺）
+          node-version: 24
 
       - name: 安装最新版 DSH
-        run: npm install -g @deepseek-ai/dsh
+        run: |
+          # 不能写 `npm install -g @deepseek-ai/dsh`：不带版本号等价于 @*，
+          # 而 semver 的 * 不匹配带 -rc/-alpha 的预发布版本，而 DSH 至今只有预发布版，
+          # 于是会报 ETARGET「No matching version found」。必须显式走 latest 标签。
+          npm install -g @deepseek-ai/dsh@latest
 
       - name: 真实环境验证 + 变异测试
         run: |
